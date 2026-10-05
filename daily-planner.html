@@ -553,6 +553,27 @@
     color: var(--text-faint);
   }
 
+  /* 过期任务的视觉提示：当前时间超过 dueTime 时触发 */
+  .task-time.overdue {
+    color: var(--urgent);
+    font-weight: 600;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  /* 统计数字变化时的滚动动画 */
+  .stat-value.bump {
+    animation: bump 0.45s ease;
+  }
+  @keyframes bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
+
   .task-delete {
     background: transparent;
     border: none;
@@ -871,6 +892,18 @@
     toast._t = setTimeout(() => toastEl.classList.remove("show"), 2200);
   }
 
+  // 当统计数字变化时触发 bump 动画（CSS .stat-value.bump）
+  function bumpIfChanged(el, newVal) {
+    if (!el) return;
+    if (el.textContent !== String(newVal)) {
+      el.textContent = newVal;
+      el.classList.remove("bump");
+      // 强制重排以重新触发动画
+      void el.offsetWidth;
+      el.classList.add("bump");
+    }
+  }
+
   // ---------- CRUD ----------
   function addTask(title, category, priority, dueTime) {
     const t = title.trim();
@@ -981,7 +1014,16 @@
     taskList.innerHTML = filtered.map(t => {
       const catLabel = CATEGORY_LABELS[t.category] || "其他";
       const priLabel = PRIORITY_LABELS[t.priority] || "中";
-      const timeLabel = t.dueTime ? `<span class="task-time">⏰ ${escapeHtml(t.dueTime)}</span>` : "";
+      // 判断是否过期：当前时间晚于 dueTime 且任务未完成
+      let overdueClass = "";
+      if (t.dueTime && !t.completed) {
+        const now = new Date();
+        const [h, m] = t.dueTime.split(":").map(Number);
+        const due = new Date(now);
+        due.setHours(h, m, 0, 0);
+        if (now > due) overdueClass = " overdue";
+      }
+      const timeLabel = t.dueTime ? `<span class="task-time${overdueClass}">⏰ ${escapeHtml(t.dueTime)}</span>` : "";
       return `
         <div class="task-item priority-${t.priority} ${t.completed ? "completed" : ""}" data-id="${t.id}">
           <div class="task-check" data-action="toggle" title="标记完成">✓</div>
@@ -1004,10 +1046,11 @@
     const active = total - done;
     const urgent = tasks.filter(t => !t.completed && t.priority === "urgent").length;
 
-    $("statTotal").textContent = total;
-    $("statDone").textContent = done;
-    $("statActive").textContent = active;
-    $("statUrgent").textContent = urgent;
+    // 数字变化时触发 bump 动画（视觉反馈，让用户感知状态变化）
+    bumpIfChanged($("statTotal"), total);
+    bumpIfChanged($("statDone"), done);
+    bumpIfChanged($("statActive"), active);
+    bumpIfChanged($("statUrgent"), urgent);
 
     $("cntAll").textContent = total;
     $("cntActive").textContent = active;
