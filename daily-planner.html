@@ -36,24 +36,39 @@
 <script>location.href = "https://github.com/leizaaniko/daily-planner#-快速开始";</script>
 <![endif]-->
 <style>
+  /* ============================================================
+     设计令牌 (Design Tokens)
+     ------------------------------------------------------------
+     修改这里即可整体换肤 / 调主题。
+     约定：颜色以 HSL 风格命名，语义化分组。
+     ============================================================ */
   :root {
-    --bg: #0b1020;
-    --bg-soft: #0f172a;
-    --surface: #1e293b;
-    --surface-2: #273449;
-    --border: #334155;
-    --text: #f1f5f9;
-    --text-soft: #cbd5e1;
-    --text-mute: #94a3b8;
-    --text-faint: #64748b;
+    /* —— 背景层级（由深到浅，营造空间感）—— */
+    --bg: #0b1020;            /* 最底层：页面主背景 */
+    --bg-soft: #0f172a;       /* 渐变辅助层 */
+    --surface: #1e293b;       /* 卡片表面 */
+    --surface-2: #273449;     /* 卡片内嵌元素（如 select、badge 背景） */
+    --border: #334155;        /* 1px 描边 */
+
+    /* —— 文本层级（4 级对比度）—— */
+    --text: #f1f5f9;          /* 主文本：标题 */
+    --text-soft: #cbd5e1;     /* 次要文本 */
+    --text-mute: #94a3b8;     /* 辅助说明 */
+    --text-faint: #64748b;    /* 极弱：占位符、icon */
+
+    /* —— 强调色（用于品牌识别、CTA、链接）—— */
     --accent: #60a5fa;
     --accent-strong: #3b82f6;
     --accent-soft: rgba(96, 165, 250, 0.12);
-    --urgent: #ef4444;
-    --high: #f97316;
-    --medium: #eab308;
-    --low: #22c55e;
-    --done: #475569;
+
+    /* —— 优先级色板（4 级，对应 task.priority-* 类名）—— */
+    --urgent: #ef4444;       /* 紧急：红 */
+    --high: #f97316;         /* 高：橙 */
+    --medium: #eab308;        /* 中：黄 */
+    --low: #22c55e;           /* 低：绿 */
+    --done: #475569;          /* 已完成：灰 */
+
+    /* —— 圆角与阴影 —— */
     --radius: 14px;
     --radius-sm: 8px;
     --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
