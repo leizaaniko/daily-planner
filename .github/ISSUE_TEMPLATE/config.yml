@@ -1,0 +1,13 @@
+# Issue 模板配置
+# 文档：https://docs.github.com/issue-templates/configuring-issue-templates-for-your-repository
+
+# 禁止使用空白 Issue（必须使用模板）
+blank_issues_enabled: false
+
+contact_links:
+  - name: 💬 项目讨论 / 一般提问
+    url: https://github.com/leizaaniko/daily-planner/discussions
+    about: 如果不是 Bug 或功能建议，而是一般讨论或使用问题，请到 Discussions 区。
+  - name: 📧 联系维护者
+    url: https://github.com/leizaaniko
+    about: 如果涉及隐私或安全问题，请直接联系维护者 @leizaaniko。
