@@ -705,8 +705,8 @@
         <span class="brand-sub">专注当下，把今天过好</span>
       </div>
       <div class="header-actions">
-        <button class="icon-btn" id="exportBtn" title="导出 JSON">↓</button>
-        <button class="icon-btn" id="importBtn" title="导入 JSON">↑</button>
+        <button class="icon-btn" id="exportBtn" title="导出 JSON" aria-label="导出任务为 JSON 文件">↓</button>
+        <button class="icon-btn" id="importBtn" title="导入 JSON" aria-label="从 JSON 文件导入任务">↑</button>
         <input type="file" id="importFile" accept="application/json" style="display:none">
       </div>
     </header>
@@ -807,7 +807,7 @@
 
   </div>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 (function () {
@@ -1026,7 +1026,9 @@
       const timeLabel = t.dueTime ? `<span class="task-time${overdueClass}">⏰ ${escapeHtml(t.dueTime)}</span>` : "";
       return `
         <div class="task-item priority-${t.priority} ${t.completed ? "completed" : ""}" data-id="${t.id}">
-          <div class="task-check" data-action="toggle" title="标记完成">✓</div>
+          <div class="task-check" data-action="toggle" role="checkbox"
+               aria-checked="${t.completed}" aria-label="标记任务为${t.completed ? '未完成' : '已完成'}：${escapeHtml(t.title)}"
+               title="标记完成" tabindex="0">✓</div>
           <div class="task-body">
             <div class="task-title" data-action="edit" contenteditable="false">${escapeHtml(t.title)}</div>
             <div class="task-meta">
@@ -1035,7 +1037,7 @@
               ${timeLabel}
             </div>
           </div>
-          <button class="task-delete" data-action="delete" title="删除">×</button>
+          <button class="task-delete" data-action="delete" title="删除" aria-label="删除任务：${escapeHtml(t.title)}">×</button>
         </div>`;
     }).join("");
   }
@@ -1093,6 +1095,16 @@
     } else if (action === "delete") {
       deleteTask(id);
     }
+  });
+
+  // 键盘可访问性：聚焦在 .task-check 上时，Enter / Space 切换完成状态
+  taskList.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const check = e.target.closest(".task-check");
+    if (!check) return;
+    e.preventDefault();
+    const item = check.closest(".task-item");
+    if (item) toggleTask(item.dataset.id);
   });
 
   // Inline edit on double click
