@@ -37,42 +37,73 @@
 <![endif]-->
 <style>
   /* ============================================================
-     设计令牌 (Design Tokens)
+     设计令牌 (Design Tokens) · v2 视觉重塑
      ------------------------------------------------------------
      修改这里即可整体换肤 / 调主题。
      约定：颜色以 HSL 风格命名，语义化分组。
+     v2 升级：更丰富的层级、光感、渐变与节奏感。
      ============================================================ */
   :root {
-    /* —— 背景层级（由深到浅，营造空间感）—— */
-    --bg: #0b1020;            /* 最底层：页面主背景 */
-    --bg-soft: #0f172a;       /* 渐变辅助层 */
-    --surface: #1e293b;       /* 卡片表面 */
-    --surface-2: #273449;     /* 卡片内嵌元素（如 select、badge 背景） */
-    --border: #334155;        /* 1px 描边 */
+    /* —— 背景层级（多层光感，营造空间纵深）—— */
+    --bg: #070a16;            /* 最底层：页面主背景（更深处） */
+    --bg-soft: #0b1020;       /* 渐变辅助层 */
+    --bg-glow-1: #1e2a4a;     /* 顶部光晕色 */
+    --bg-glow-2: #2a1a4a;     /* 侧向紫光晕 */
+    --surface: rgba(30, 41, 59, 0.65);  /* 卡片表面：半透明以承接玻璃质感 */
+    --surface-solid: #1e293b; /* 不透明回退 */
+    --surface-2: rgba(51, 65, 85, 0.55); /* 卡片内嵌元素 */
+    --surface-3: rgba(71, 85, 105, 0.4); /* 更浅层 */
+    --border: rgba(148, 163, 184, 0.14); /* 1px 描边：半透明 */
+    --border-strong: rgba(148, 163, 184, 0.28);
+    --border-glow: rgba(96, 165, 250, 0.45);
 
-    /* —— 文本层级（4 级对比度）—— */
-    --text: #f1f5f9;          /* 主文本：标题 */
-    --text-soft: #cbd5e1;     /* 次要文本 */
+    /* —— 文本层级（5 级对比度，更精细）—— */
+    --text: #f8fafc;          /* 主文本：标题 */
+    --text-soft: #e2e8f0;     /* 次要文本 */
     --text-mute: #94a3b8;     /* 辅助说明 */
     --text-faint: #64748b;    /* 极弱：占位符、icon */
+    --text-ghost: #475569;    /* 极致弱：分割辅助 */
 
     /* —— 强调色（用于品牌识别、CTA、链接）—— */
-    --accent: #60a5fa;
-    --accent-strong: #3b82f6;
-    --accent-soft: rgba(96, 165, 250, 0.12);
+    --accent: #818cf8;        /* 偏紫蓝，更柔和现代 */
+    --accent-strong: #6366f1; /* indigo-500 */
+    --accent-deep: #4f46e5;   /* indigo-600 */
+    --accent-soft: rgba(129, 140, 248, 0.16);
+    --accent-glow: rgba(129, 140, 248, 0.35);
+    --accent-grad: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%);
 
     /* —— 优先级色板（4 级，对应 task.priority-* 类名）—— */
-    --urgent: #ef4444;       /* 紧急：红 */
-    --high: #f97316;         /* 高：橙 */
-    --medium: #eab308;        /* 中：黄 */
-    --low: #22c55e;           /* 低：绿 */
-    --done: #475569;          /* 已完成：灰 */
+    --urgent: #f43f5e;        /* rose-500，更鲜艳的红 */
+    --high: #fb923c;          /* orange-400 */
+    --medium: #fbbf24;        /* amber-400 */
+    --low: #34d399;           /* emerald-400 */
+    --done: #64748b;          /* 已完成：灰 */
 
-    /* —— 圆角与阴影 —— */
-    --radius: 14px;
+    /* —— 字号节奏（更清晰的层级关系）—— */
+    --fs-display: 32px;       /* 品牌标题 */
+    --fs-h1: 24px;            /* 主标题 */
+    --fs-h2: 18px;            /* 次标题 */
+    --fs-body: 15px;          /* 正文 */
+    --fs-small: 13px;         /* 小字 */
+    --fs-tiny: 11px;          /* 极小字 */
+
+    /* —— 圆角与阴影（更柔和、更丰富）—— */
+    --radius: 18px;
+    --radius-md: 12px;
     --radius-sm: 8px;
-    --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 0 1px var(--border), 0 20px 40px -20px rgba(59, 130, 246, 0.25);
+    --radius-xs: 6px;
+    --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.3);
+    --shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 0 1px var(--border-glow), 0 24px 48px -16px var(--accent-glow);
+    --inner-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+
+    /* —— 动效曲线 —— */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --t-fast: 0.15s;
+    --t-base: 0.25s;
+    --t-slow: 0.45s;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -83,19 +114,34 @@
 
   body {
     font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans CN", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: radial-gradient(ellipse at top, #1e293b 0%, var(--bg) 55%);
+    /* 多层径向渐变：模拟环境光、营造空间深度 */
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, var(--bg-glow-1) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 100% 20%, var(--bg-glow-2) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 40% at 0% 80%, rgba(30, 41, 59, 0.5) 0%, transparent 50%),
+      var(--bg);
     background-attachment: fixed;
     color: var(--text);
     line-height: 1.6;
     min-height: 100vh;
-    padding: 32px 20px 64px;
+    padding: 36px 20px 72px;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+    letter-spacing: -0.005em;
   }
 
   .container {
     max-width: 760px;
     margin: 0 auto;
+    /* 入场动画 */
+    animation: containerRise 0.6s var(--ease-out) both;
+  }
+
+  @keyframes containerRise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* ============ Header ============ */
@@ -103,55 +149,66 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
     gap: 20px;
   }
 
   .brand {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
 
   .brand-title {
-    font-size: 28px;
+    font-size: var(--fs-display);
     font-weight: 700;
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    /* 更柔和的金属光泽渐变 */
+    background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 60%, #94a3b8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .brand-sub {
-    font-size: 14px;
+    font-size: var(--fs-small);
     color: var(--text-mute);
+    letter-spacing: 0.01em;
   }
 
   .header-actions {
     display: flex;
-    gap: 8px;
+    gap: 10px;
   }
 
   .icon-btn {
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text-soft);
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: var(--radius-sm);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    transition: all 0.2s ease;
+    transition: all var(--t-base) var(--ease-out);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .icon-btn:hover {
     background: var(--surface-2);
-    color: var(--text);
-    border-color: var(--accent);
+    color: var(--accent);
+    border-color: var(--border-glow);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm), 0 0 0 3px var(--accent-soft);
+  }
+
+  .icon-btn:active {
+    transform: translateY(0);
   }
 
   /* ============ Date Card ============ */
