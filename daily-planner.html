@@ -888,6 +888,235 @@
     transform: rotate(90deg);
   }
 
+  /* ============ Sub-task Checklist ============ */
+  .checklist-wrap {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* 展开切换按钮 */
+  .checklist-toggle {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px 4px 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-mute);
+    font-size: 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all var(--t-fast) var(--ease-out);
+    user-select: none;
+  }
+
+  .checklist-toggle:hover {
+    background: var(--surface-bright);
+    border-color: var(--border);
+    color: var(--text-soft);
+  }
+
+  .checklist-toggle .chevron {
+    transition: transform var(--t-base) var(--ease-out);
+    font-size: 10px;
+    line-height: 1;
+    display: inline-block;
+  }
+
+  .checklist-toggle.expanded .chevron {
+    transform: rotate(90deg);
+  }
+
+  .checklist-toggle .sub-progress {
+    color: var(--accent);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .checklist-toggle .sub-pct {
+    color: var(--text-faint);
+    font-size: 11px;
+  }
+
+  /* 进度条（折叠时也可见） */
+  .sub-progress-bar {
+    height: 3px;
+    width: 100%;
+    background: var(--surface-3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .sub-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent-strong) 100%);
+    border-radius: 2px;
+    transition: width 0.4s var(--ease-out);
+  }
+
+  /* 展开后的子任务容器 */
+  .checklist-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 0 4px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--border);
+  }
+
+  /* 单条子任务 */
+  .sub-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: var(--radius-xs);
+    transition: background var(--t-fast) var(--ease-out);
+    animation: slideIn 0.25s var(--ease-out);
+  }
+
+  .sub-item:hover {
+    background: var(--surface-2);
+  }
+
+  .sub-check {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--low);
+    cursor: pointer;
+    background: transparent;
+    transition: all var(--t-fast) var(--ease-out);
+    font-weight: 700;
+  }
+
+  .sub-check:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .sub-item.done .sub-check {
+    background: var(--low);
+    border-color: var(--low);
+    color: #052e1f;
+  }
+
+  .sub-text {
+    flex: 1;
+    color: var(--text-soft);
+    font-size: 14px;
+    line-height: 1.4;
+    transition: color var(--t-fast) var(--ease-out);
+  }
+
+  .sub-item.done .sub-text {
+    color: var(--text-faint);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-ghost);
+  }
+
+  .sub-delete {
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 16px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: all var(--t-fast) var(--ease-out);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .sub-item:hover .sub-delete {
+    opacity: 1;
+  }
+
+  .sub-delete:hover {
+    color: var(--urgent);
+    background: rgba(244, 63, 94, 0.12);
+  }
+
+  /* 添加子任务行 */
+  .sub-add-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 0 4px;
+  }
+
+  .sub-add-input {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    outline: none;
+    transition: all var(--t-fast) var(--ease-out);
+  }
+
+  .sub-add-input::placeholder {
+    color: var(--text-faint);
+  }
+
+  .sub-add-input:focus {
+    border-color: var(--border-glow);
+    background: var(--surface-bright);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .sub-add-btn {
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--t-fast) var(--ease-out);
+  }
+
+  .sub-add-btn:hover {
+    background: var(--accent);
+    color: white;
+    transform: scale(1.08);
+  }
+
+  /* 移动端：子任务删除按钮常显 */
+  @media (max-width: 480px) {
+    .sub-delete { opacity: 1; }
+    .checklist-toggle { font-size: 11px; }
+    .sub-text { font-size: 13px; }
+  }
+
+  /* 主任务展开时减小底部内边距 */
+  .task-item.expanded {
+    padding-bottom: 14px;
+  }
+
   /* ============ Empty State ============ */
   .empty-state {
     text-align: center;
@@ -1168,6 +1397,8 @@
 
   let tasks = loadTasks();
   let currentFilter = "all";
+  // 记录展开子任务面板的任务 id（仅存在于内存，刷新后折叠）
+  const expandedTasks = new Set();
 
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
@@ -1266,7 +1497,8 @@
       priority: priority || "medium",
       dueTime: dueTime || "",
       completed: false,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      checklist: []  // 子任务列表，初始为空
     });
     saveTasks();
     render();
@@ -1278,10 +1510,96 @@
     const t = tasks.find(t => t.id === id);
     if (t) {
       t.completed = !t.completed;
-      if (t.completed) t.completedAt = Date.now();
+      if (t.completed) {
+        t.completedAt = Date.now();
+        // 完成主任务时，所有子任务自动勾选完成
+        if (Array.isArray(t.checklist)) {
+          t.checklist.forEach(s => s.completed = true);
+        }
+      }
       saveTasks();
       render();
     }
+  }
+
+  // ---------- Sub-task (Checklist) ----------
+  // 展开或收起某个任务的子任务面板
+  function toggleChecklist(id) {
+    if (expandedTasks.has(id)) {
+      expandedTasks.delete(id);
+    } else {
+      expandedTasks.add(id);
+    }
+    render();
+    // 展开后自动聚焦到输入框
+    if (expandedTasks.has(id)) {
+      setTimeout(() => {
+        const item = document.querySelector(`.task-item[data-id="${id}"]`);
+        if (item) {
+          const input = item.querySelector('.sub-add-input');
+          if (input) input.focus();
+        }
+      }, 30);
+    }
+  }
+
+  // 给某任务添加一个子任务
+  function addSubtask(taskId, text) {
+    const t = tasks.find(t => t.id === taskId);
+    const s = (text || "").trim();
+    if (!t) return;
+    if (!s) { toast("请输入子任务内容"); return; }
+    if (!Array.isArray(t.checklist)) t.checklist = [];
+    t.checklist.push({
+      id: uid(),
+      text: s.slice(0, 120),
+      completed: false
+    });
+    saveTasks();
+    render();
+    // 重新聚焦到输入框方便连续添加
+    setTimeout(() => {
+      const item = document.querySelector(`.task-item[data-id="${taskId}"]`);
+      if (item) {
+        const input = item.querySelector('.sub-add-input');
+        if (input) input.focus();
+      }
+    }, 30);
+  }
+
+  // 切换某个子任务的完成状态
+  function toggleSubtask(taskId, subId) {
+    const t = tasks.find(t => t.id === taskId);
+    if (!t || !Array.isArray(t.checklist)) return;
+    const s = t.checklist.find(s => s.id === subId);
+    if (!s) return;
+    s.completed = !s.completed;
+    // 若所有子任务都完成，自动标记主任务完成；若有任一未完成，主任务自动取消完成
+    const allDone = t.checklist.length > 0 && t.checklist.every(x => x.completed);
+    if (allDone && !t.completed) {
+      t.completed = true;
+      t.completedAt = Date.now();
+      toast("全部子任务完成，主任务已自动标记 ✓");
+    } else if (!allDone && t.completed) {
+      t.completed = false;
+      delete t.completedAt;
+    }
+    saveTasks();
+    render();
+  }
+
+  // 删除某个子任务
+  function deleteSubtask(taskId, subId) {
+    const t = tasks.find(t => t.id === taskId);
+    if (!t || !Array.isArray(t.checklist)) return;
+    t.checklist = t.checklist.filter(s => s.id !== subId);
+    // 删除后若主任务被自动标记完成（因之前 allDone），现在可能不再 allDone，需校正
+    if (t.completed && t.checklist.length > 0 && !t.checklist.every(x => x.completed)) {
+      t.completed = false;
+      delete t.completedAt;
+    }
+    saveTasks();
+    render();
   }
 
   function deleteTask(id) {
@@ -1372,8 +1690,54 @@
         if (now > due) overdueClass = " overdue";
       }
       const timeLabel = t.dueTime ? `<span class="task-time${overdueClass}">⏰ ${escapeHtml(t.dueTime)}</span>` : "";
+
+      // —— 子任务区渲染 ——
+      const subs = Array.isArray(t.checklist) ? t.checklist : [];
+      const subDone = subs.filter(s => s.completed).length;
+      const subTotal = subs.length;
+      const expanded = expandedTasks.has(t.id); // 是否展开子任务面板
+      const subPct = subTotal ? Math.round((subDone / subTotal) * 100) : 0;
+
+      // 头部按钮：显示进度 + 展开/收起。即使没子任务也显示"+ 子任务"用于添加
+      const checklistHeader = `
+        <button class="checklist-toggle ${expanded ? 'expanded' : ''}" data-action="toggle-checklist"
+                aria-expanded="${expanded}" aria-label="展开子任务"
+                title="${expanded ? '收起' : '展开'}子任务">
+          <span class="chevron">▸</span>
+          ${subTotal ? `<span class="sub-progress">${subDone}/${subTotal}</span>` : '子任务'}
+          ${subTotal ? `<span class="sub-pct">${subPct}%</span>` : ''}
+        </button>`;
+
+      // 子任务列表（仅展开时渲染）
+      const checklistBody = expanded ? `
+        <div class="checklist-body">
+          ${subs.map(s => `
+            <div class="sub-item ${s.completed ? 'done' : ''}" data-sub-id="${s.id}">
+              <div class="sub-check" data-action="toggle-sub" role="checkbox"
+                   aria-checked="${s.completed}" tabindex="0"
+                   aria-label="${s.completed ? '标记为未完成' : '标记为完成'}：${escapeHtml(s.text)}"
+                   title="勾选">${s.completed ? '✓' : ''}</div>
+              <div class="sub-text">${escapeHtml(s.text)}</div>
+              <button class="sub-delete" data-action="delete-sub"
+                      aria-label="删除子任务：${escapeHtml(s.text)}" title="删除">×</button>
+            </div>
+          `).join('')}
+          <div class="sub-add-row">
+            <input type="text" class="sub-add-input" data-action="sub-input"
+                   placeholder="添加一个步骤，回车确认…" maxlength="120" />
+            <button class="sub-add-btn" data-action="add-sub" title="添加" aria-label="添加子任务">+</button>
+          </div>
+        </div>
+      ` : '';
+
+      // 子任务进度条（有子任务时显示，即使在折叠状态也可见）
+      const progressBar = subTotal ? `
+        <div class="sub-progress-bar" title="${subDone}/${subTotal} 完成">
+          <div class="sub-progress-fill" style="width:${subPct}%"></div>
+        </div>` : '';
+
       return `
-        <div class="task-item priority-${t.priority} ${t.completed ? "completed" : ""}" data-id="${t.id}">
+        <div class="task-item priority-${t.priority} ${t.completed ? "completed" : ""} ${expanded ? 'expanded' : ''}" data-id="${t.id}">
           <div class="task-check" data-action="toggle" role="checkbox"
                aria-checked="${t.completed}" aria-label="标记任务为${t.completed ? '未完成' : '已完成'}：${escapeHtml(t.title)}"
                title="标记完成" tabindex="0">✓</div>
@@ -1383,6 +1747,11 @@
               <span class="badge cat-${t.category}">${catLabel}</span>
               <span class="badge priority-${t.priority}">${priLabel}</span>
               ${timeLabel}
+            </div>
+            <div class="checklist-wrap">
+              ${checklistHeader}
+              ${progressBar}
+              ${checklistBody}
             </div>
           </div>
           <button class="task-delete" data-action="delete" title="删除" aria-label="删除任务：${escapeHtml(t.title)}">×</button>
@@ -1442,18 +1811,58 @@
       toggleTask(id);
     } else if (action === "delete") {
       deleteTask(id);
+    } else if (action === "toggle-checklist") {
+      // 展开 / 收起子任务面板
+      toggleChecklist(id);
+    } else if (action === "toggle-sub") {
+      // 勾选某个子任务
+      const subItem = e.target.closest('.sub-item');
+      if (subItem) toggleSubtask(id, subItem.dataset.subId);
+    } else if (action === "delete-sub") {
+      // 删除某个子任务
+      const subItem = e.target.closest('.sub-item');
+      if (subItem) deleteSubtask(id, subItem.dataset.subId);
+    } else if (action === "add-sub") {
+      // 点 + 按钮添加子任务：取同行的输入框值
+      const input = item.querySelector('.sub-add-input');
+      if (input) {
+        addSubtask(id, input.value);
+      }
     }
   });
 
   // 键盘可访问性：聚焦在 .task-check 上时，Enter / Space 切换完成状态
   taskList.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" && e.key !== " ") return;
+    // 子任务勾选框
+    const subCheck = e.target.closest(".sub-check");
+    if (subCheck) {
+      e.preventDefault();
+      const item = subCheck.closest(".task-item");
+      const subItem = subCheck.closest(".sub-item");
+      if (item && subItem) toggleSubtask(item.dataset.id, subItem.dataset.subId);
+      return;
+    }
+    // 主任务勾选框
     const check = e.target.closest(".task-check");
     if (!check) return;
     e.preventDefault();
     const item = check.closest(".task-item");
     if (item) toggleTask(item.dataset.id);
   });
+
+  // 子任务输入框：回车添加
+  taskList.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    const input = e.target.closest('[data-action="sub-input"]');
+    if (!input) return;
+    e.preventDefault();
+    const item = input.closest(".task-item");
+    if (item) addSubtask(item.dataset.id, input.value);
+  });
+
+  // 子任务输入框失焦时，把残留文本保留（不自动清空，方便继续输入）
+  // 点击其它区域时由 CSS 失焦自然处理
 
   // Inline edit on double click
   taskList.addEventListener("dblclick", (e) => {
@@ -1561,7 +1970,15 @@
       priority: ["urgent","high","medium","low"].includes(t.priority) ? t.priority : "medium",
       dueTime: t.dueTime || "",
       completed: !!t.completed,
-      createdAt: t.createdAt || Date.now()
+      createdAt: t.createdAt || Date.now(),
+      // 子任务列表：[{id,text,completed}]。旧数据无此字段时默认空数组（向前兼容）
+      checklist: Array.isArray(t.checklist)
+        ? t.checklist.map(s => ({
+            id: s.id || uid(),
+            text: String(s.text || ""),
+            completed: !!s.completed
+          })).filter(s => s.text)
+        : []
     };
   }
 
