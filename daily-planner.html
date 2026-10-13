@@ -888,6 +888,77 @@
     transform: rotate(90deg);
   }
 
+  /* ============ Notes（任务 / 子任务的自由书写区）============
+     平时隐形，仅留极淡提示；悬停 / 聚焦时显现边框与底色。
+     不出现“备注”字样，保持界面干净。 */
+  .note-input,
+  .sub-note {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+    color: var(--text-soft);
+    font-family: inherit;
+    resize: none;
+    overflow: hidden;
+    outline: none;
+    word-break: break-word;
+    transition: background var(--t-fast) var(--ease-out),
+                border-color var(--t-fast) var(--ease-out),
+                box-shadow var(--t-fast) var(--ease-out);
+  }
+
+  .note-input {
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 4px 8px;
+  }
+
+  .note-input::placeholder { color: var(--text-ghost); }
+
+  .note-input:hover {
+    background: var(--surface-2);
+    border-color: var(--border);
+  }
+
+  .note-input:focus {
+    background: var(--surface-bright);
+    border-color: var(--border-glow);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+    color: var(--text);
+  }
+
+  /* 子任务：文本 + 说明纵向排列，与勾选框顶部对齐 */
+  .sub-main { flex: 1; min-width: 0; }
+
+  .sub-note {
+    margin-top: 1px;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 2px 6px;
+    color: var(--text-mute);
+  }
+
+  .sub-note::placeholder { color: var(--text-ghost); opacity: 0.75; }
+
+  .sub-note:hover {
+    background: var(--surface-2);
+    border-color: var(--border);
+  }
+
+  .sub-note:focus {
+    background: var(--surface-bright);
+    border-color: var(--border-glow);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+    color: var(--text-soft);
+  }
+
+  .sub-item .sub-check { margin-top: 2px; }
+  .sub-item .sub-delete { margin-top: 1px; }
+
   /* ============ Sub-task Checklist ============ */
   .checklist-wrap {
     margin-top: 12px;
@@ -971,7 +1042,7 @@
   /* 单条子任务 */
   .sub-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     padding: 6px 8px;
     border-radius: var(--radius-xs);
@@ -1483,6 +1554,35 @@
     }
   }
 
+  // ---------- Notes（任务 / 子任务的自由书写区）----------
+  // 多行输入框随内容自适应高度
+  function autoGrowOne(el) {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }
+  // 渲染后统一校正所有说明框高度（已有内容的任务也能正确展开）
+  function autoGrowAllNotes() {
+    taskList.querySelectorAll(".note-input, .sub-note").forEach(autoGrowOne);
+  }
+  // 说明文本防抖保存：避免每次按键都写 localStorage
+  let noteSaveTimer = null;
+  function scheduleSave() {
+    if (noteSaveTimer) clearTimeout(noteSaveTimer);
+    noteSaveTimer = setTimeout(() => {
+      noteSaveTimer = null;
+      saveTasks();
+    }, 350);
+  }
+  // 失焦时立即落盘，避免防抖窗口未结束就关闭页面
+  function flushSave() {
+    if (noteSaveTimer) {
+      clearTimeout(noteSaveTimer);
+      noteSaveTimer = null;
+    }
+    saveTasks();
+  }
+
   // ---------- CRUD ----------
   function addTask(title, category, priority, dueTime) {
     const t = title.trim();
@@ -1498,6 +1598,7 @@
       dueTime: dueTime || "",
       completed: false,
       createdAt: Date.now(),
+      note: "",      // 任务说明，初始为空
       checklist: []  // 子任务列表，初始为空
     });
     saveTasks();
@@ -1553,7 +1654,8 @@
     t.checklist.push({
       id: uid(),
       text: s.slice(0, 120),
-      completed: false
+      completed: false,
+      note: ""     // 子任务说明，初始为空
     });
     saveTasks();
     render();
@@ -1717,7 +1819,11 @@
                    aria-checked="${s.completed}" tabindex="0"
                    aria-label="${s.completed ? '标记为未完成' : '标记为完成'}：${escapeHtml(s.text)}"
                    title="勾选">${s.completed ? '✓' : ''}</div>
-              <div class="sub-text">${escapeHtml(s.text)}</div>
+              <div class="sub-main">
+                <div class="sub-text">${escapeHtml(s.text)}</div>
+                <textarea class="sub-note" data-action="sub-note-input" rows="1"
+                          placeholder="写点说明…" aria-label="子任务说明">${escapeHtml(s.note || "")}</textarea>
+              </div>
               <button class="sub-delete" data-action="delete-sub"
                       aria-label="删除子任务：${escapeHtml(s.text)}" title="删除">×</button>
             </div>
@@ -1748,6 +1854,8 @@
               <span class="badge priority-${t.priority}">${priLabel}</span>
               ${timeLabel}
             </div>
+            <textarea class="note-input" data-action="note-input" rows="1"
+                      placeholder="写点说明…" aria-label="任务说明">${escapeHtml(t.note || "")}</textarea>
             <div class="checklist-wrap">
               ${checklistHeader}
               ${progressBar}
@@ -1757,6 +1865,8 @@
           <button class="task-delete" data-action="delete" title="删除" aria-label="删除任务：${escapeHtml(t.title)}">×</button>
         </div>`;
     }).join("");
+
+    autoGrowAllNotes();
   }
 
   function updateStats() {
@@ -1863,6 +1973,30 @@
 
   // 子任务输入框失焦时，把残留文本保留（不自动清空，方便继续输入）
   // 点击其它区域时由 CSS 失焦自然处理
+
+  // 任务 / 子任务「说明」输入：实时写入内存 + 防抖保存（不重渲染，避免丢失光标）
+  taskList.addEventListener("input", (e) => {
+    const el = e.target;
+    if (el.matches('[data-action="note-input"]')) {
+      const item = el.closest(".task-item");
+      const t = item && tasks.find(x => x.id === item.dataset.id);
+      if (t) { t.note = el.value; scheduleSave(); autoGrowOne(el); }
+    } else if (el.matches('[data-action="sub-note-input"]')) {
+      const item = el.closest(".task-item");
+      const subItem = el.closest(".sub-item");
+      const t = item && tasks.find(x => x.id === item.dataset.id);
+      const s = t && Array.isArray(t.checklist) && subItem &&
+                t.checklist.find(x => x.id === subItem.dataset.subId);
+      if (s) { s.note = el.value; scheduleSave(); autoGrowOne(el); }
+    }
+  });
+
+  // 说明框失焦时立即落盘
+  taskList.addEventListener("focusout", (e) => {
+    if (e.target.matches && e.target.matches('[data-action="note-input"], [data-action="sub-note-input"]')) {
+      flushSave();
+    }
+  });
 
   // Inline edit on double click
   taskList.addEventListener("dblclick", (e) => {
@@ -1971,12 +2105,15 @@
       dueTime: t.dueTime || "",
       completed: !!t.completed,
       createdAt: t.createdAt || Date.now(),
-      // 子任务列表：[{id,text,completed}]。旧数据无此字段时默认空数组（向前兼容）
+      // 任务说明（自由书写区）。旧数据无此字段时默认空串（向前兼容）
+      note: typeof t.note === "string" ? t.note : "",
+      // 子任务列表：[{id,text,completed,note}]。旧数据无此字段时默认空数组（向前兼容）
       checklist: Array.isArray(t.checklist)
         ? t.checklist.map(s => ({
             id: s.id || uid(),
             text: String(s.text || ""),
-            completed: !!s.completed
+            completed: !!s.completed,
+            note: typeof s.note === "string" ? s.note : ""
           })).filter(s => s.text)
         : []
     };
@@ -1984,7 +2121,8 @@
 
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
-    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.isContentEditable) return;
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" ||
+        e.target.tagName === "TEXTAREA" || e.target.isContentEditable) return;
     if (e.key === "n" || e.key === "N") {
       e.preventDefault();
       taskInput.focus();
