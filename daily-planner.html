@@ -1440,6 +1440,47 @@
   .point-item .point-check,
   .point-item .point-delete { margin-top: 1px; }
 
+  /* ============ Add-ghost（悬停才浮现的“添加”入口）============
+     平时完全隐形，鼠标移入子任务列表 / 分点列表时才浮现；点击才展开输入框 */
+  .add-ghost {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    margin-top: 2px;
+    background: transparent;
+    border: 1px dashed transparent;
+    color: var(--text-faint);
+    font-size: 11px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    opacity: 0;
+    transition: opacity var(--t-fast) var(--ease-out),
+                color var(--t-fast) var(--ease-out),
+                border-color var(--t-fast) var(--ease-out),
+                background var(--t-fast) var(--ease-out);
+    user-select: none;
+  }
+
+  .checklist-body:hover > .add-ghost,
+  .points-body:hover > .add-ghost,
+  .add-ghost:focus-visible {
+    opacity: 1;
+  }
+
+  .add-ghost:hover {
+    color: var(--text-soft);
+    border-color: var(--border);
+    background: var(--surface-2);
+  }
+
+  /* 触屏 / 无悬停设备：入口常显，否则无法添加 */
+  @media (hover: none) {
+    .add-ghost { opacity: 1; }
+  }
+
   /* 移动端：子任务删除按钮常显；说明框换行到内容下方 */
   @media (max-width: 480px) {
     .sub-delete { opacity: 1; }
@@ -1744,6 +1785,9 @@
   const expandedTasks = new Set();
   // 记录展开“分点”面板的子任务（键为 taskId|subId，仅存在于内存）
   const expandedPoints = new Set();
+  // 记录已展开的“添加输入行”（键：sub|taskId 或 point|taskId|subId）。
+  // 平时入口悬停才浮现，点击后才展开输入框，不占版面
+  const openAdds = new Set();
 
   // ---------- DOM ----------
   const $ = (id) => document.getElementById(id);
@@ -1909,16 +1953,33 @@
       expandedTasks.add(id);
     }
     render();
-    // 展开后自动聚焦到输入框
-    if (expandedTasks.has(id)) {
-      setTimeout(() => {
-        const item = document.querySelector(`.task-item[data-id="${id}"]`);
-        if (item) {
-          const input = item.querySelector('.sub-add-input');
-          if (input) input.focus();
-        }
-      }, 30);
+  }
+
+  // ---------- “添加输入行”的展开 / 收起 ----------
+  // 展开某个添加入口：记录状态 → 重渲染 → 聚焦输入框
+  function openAddRow(key, inputSelector) {
+    openAdds.add(key);
+    render();
+    setTimeout(() => {
+      const input = document.querySelector(inputSelector);
+      if (input) input.focus();
+    }, 30);
+  }
+
+  // 收起某个添加入口（清空并折叠回悬停入口）
+  function closeAddRow(inputEl) {
+    if (!inputEl) return;
+    inputEl.value = "";
+    const item = inputEl.closest(".task-item");
+    if (!item) return;
+    if (inputEl.matches('[data-action="sub-input"]')) {
+      openAdds.delete("sub|" + item.dataset.id);
+    } else {
+      const subItem = inputEl.closest(".sub-item");
+      if (!subItem) return;
+      openAdds.delete("point|" + item.dataset.id + "|" + subItem.dataset.subId);
     }
+    render();
   }
 
   // 给某任务添加一个子任务
@@ -2007,14 +2068,6 @@
       expandedPoints.add(key);
     }
     render();
-    // 展开后自动聚焦到分点输入框
-    if (expandedPoints.has(key)) {
-      setTimeout(() => {
-        const input = document.querySelector(
-          `.task-item[data-id="${taskId}"] .sub-item[data-sub-id="${subId}"] .point-add-input`);
-        if (input) input.focus();
-      }, 30);
-    }
   }
 
   // 给某个子任务添加一个分点
@@ -2226,11 +2279,13 @@
                                   aria-label="删除分点：${escapeHtml(p.text)}" title="删除">×</button>
                         </div>
                       `).join('')}
+                      ${openAdds.has("point|" + t.id + "|" + s.id) ? `
                       <div class="point-add-row">
                         <input type="text" class="point-add-input" data-action="point-input"
                                placeholder="添加一个分点，回车确认…" maxlength="120" />
                         <button class="point-add-btn" data-action="add-point" title="添加" aria-label="添加分点">+</button>
-                      </div>
+                      </div>` : `
+                      <button class="add-ghost add-ghost--point" data-action="open-point-add" aria-label="添加分点">＋ 添加分点</button>`}
                     </div>` : ''}
                 </div>
               </div>
@@ -2239,11 +2294,13 @@
             </div>
           `;
           }).join('')}
+          ${openAdds.has("sub|" + t.id) ? `
           <div class="sub-add-row">
             <input type="text" class="sub-add-input" data-action="sub-input"
                    placeholder="添加一个步骤，回车确认…" maxlength="120" />
             <button class="sub-add-btn" data-action="add-sub" title="添加" aria-label="添加子任务">+</button>
-          </div>
+          </div>` : `
+          <button class="add-ghost add-ghost--sub" data-action="open-sub-add" aria-label="添加子任务">＋ 添加步骤</button>`}
         </div>
       ` : '';
 
@@ -2370,6 +2427,17 @@
       const subItem = e.target.closest('.sub-item');
       const input = subItem && subItem.querySelector('.point-add-input');
       if (subItem && input) addPoint(id, subItem.dataset.subId, input.value);
+    } else if (action === "open-sub-add") {
+      // 悬停入口 → 展开“添加步骤”输入框
+      openAddRow("sub|" + id, `.task-item[data-id="${id}"] .sub-add-input`);
+    } else if (action === "open-point-add") {
+      // 悬停入口 → 展开“添加分点”输入框
+      const subItem = e.target.closest('.sub-item');
+      if (subItem) {
+        const subId = subItem.dataset.subId;
+        openAddRow("point|" + id + "|" + subId,
+          `.task-item[data-id="${id}"] .sub-item[data-sub-id="${subId}"] .point-add-input`);
+      }
     }
   });
 
@@ -2403,8 +2471,16 @@
     if (item) toggleTask(item.dataset.id);
   });
 
-  // 子任务 / 分点输入框：回车添加
+  // 子任务 / 分点输入框：回车添加，Esc 收起回悬停入口
   taskList.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const addInput = e.target.closest('[data-action="sub-input"], [data-action="point-input"]');
+      if (addInput) {
+        e.preventDefault();
+        closeAddRow(addInput);
+      }
+      return;
+    }
     if (e.key !== "Enter") return;
     const subInput = e.target.closest('[data-action="sub-input"]');
     if (subInput) {
@@ -2422,10 +2498,18 @@
     }
   });
 
-  // 子任务输入框失焦时，把残留文本保留（不自动清空，方便继续输入）
-  // 点击其它区域时由 CSS 失焦自然处理
-
-  // 任务 / 子任务「说明」输入：实时写入内存 + 防抖保存（不重渲染，避免丢失光标）
+  // 失焦处理：说明框立即落盘；空的添加入口收起回悬停态
+  taskList.addEventListener("focusout", (e) => {
+    const el = e.target;
+    if (!el.matches) return;
+    if (el.matches('[data-action="note-input"], [data-action="sub-note-input"], [data-action="point-note-input"]')) {
+      flushSave();
+    } else if (el.matches('[data-action="sub-input"], [data-action="point-input"]')) {
+      // 已输入内容则保留（方便继续编辑）；为空则收起
+      if (!el.value.trim()) closeAddRow(el);
+    }
+  });
+  // 任务 / 子任务 / 分点「说明」输入：实时写入内存 + 防抖保存（不重渲染，避免丢失光标）
   taskList.addEventListener("input", (e) => {
     const el = e.target;
     if (el.matches('[data-action="note-input"]')) {
@@ -2449,13 +2533,6 @@
       const p = s && Array.isArray(s.points) && pointItem &&
                 s.points.find(x => x.id === pointItem.dataset.pointId);
       if (p) { p.note = el.value; scheduleSave(); autoGrowOne(el); }
-    }
-  });
-
-  // 说明框失焦时立即落盘
-  taskList.addEventListener("focusout", (e) => {
-    if (e.target.matches && e.target.matches('[data-action="note-input"], [data-action="sub-note-input"], [data-action="point-note-input"]')) {
-      flushSave();
     }
   });
 
