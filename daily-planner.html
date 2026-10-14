@@ -838,6 +838,45 @@
     letter-spacing: 0.02em;
   }
 
+  /* meta 标签可点击：指针 + 悬停高亮 */
+  .task-meta .badge,
+  .task-time {
+    cursor: pointer;
+    transition: transform var(--t-fast) var(--ease-out),
+                filter var(--t-fast) var(--ease-out);
+  }
+  .task-meta .badge:hover,
+  .task-time:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.15);
+  }
+
+  /* 未设置时间时的占位入口 */
+  .task-time--empty {
+    color: var(--text-ghost);
+    border: 1px dashed var(--border);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .task-time--empty:hover {
+    color: var(--text-soft);
+    border-color: var(--border-strong);
+    background: var(--surface-2);
+  }
+
+  /* 点击时间后临时出现的原生选择器 */
+  .task-time-input {
+    font-size: var(--fs-tiny);
+    font-family: inherit;
+    background: var(--surface-bright);
+    border: 1px solid var(--border-glow);
+    border-radius: 6px;
+    padding: 2px 6px;
+    color: var(--text);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
   /* 过期任务的视觉提示：当前时间超过 dueTime 时触发 */
   .task-time.overdue {
     color: var(--urgent);
@@ -2215,7 +2254,9 @@
         due.setHours(h, m, 0, 0);
         if (now > due) overdueClass = " overdue";
       }
-      const timeLabel = t.dueTime ? `<span class="task-time${overdueClass}">⏰ ${escapeHtml(t.dueTime)}</span>` : "";
+      const timeLabel = t.dueTime
+        ? `<span class="task-time${overdueClass}" data-action="edit-time" title="点击修改时间">⏰ ${escapeHtml(t.dueTime)}</span>`
+        : `<span class="task-time task-time--empty" data-action="edit-time" title="点击设置时间">＋ 时间</span>`;
 
       // —— 子任务区渲染 ——
       const subs = Array.isArray(t.checklist) ? t.checklist : [];
@@ -2322,8 +2363,8 @@
                         placeholder="写点说明…" aria-label="任务说明">${escapeHtml(t.note || "")}</textarea>
             </div>
             <div class="task-meta">
-              <span class="badge cat-${t.category}">${catLabel}</span>
-              <span class="badge priority-${t.priority}">${priLabel}</span>
+              <span class="badge cat-${t.category}" data-action="edit-cat" title="点击切换分类">${catLabel}</span>
+              <span class="badge priority-${t.priority}" data-action="edit-priority" title="点击切换优先级">${priLabel}</span>
               ${timeLabel}
             </div>
             <div class="checklist-wrap">
@@ -2386,7 +2427,9 @@
     const item = e.target.closest(".task-item");
     if (!item) return;
     const id = item.dataset.id;
-    const action = e.target.dataset.action;
+    // 从最近的带 data-action 的祖先取动作，兼容按钮内嵌套 span 的点击
+    const actionEl = e.target.closest('[data-action]');
+    const action = actionEl ? actionEl.dataset.action : undefined;
     if (action === "toggle") {
       toggleTask(id);
     } else if (action === "delete") {
@@ -2438,6 +2481,49 @@
         openAddRow("point|" + id + "|" + subId,
           `.task-item[data-id="${id}"] .sub-item[data-sub-id="${subId}"] .point-add-input`);
       }
+    } else if (action === "edit-cat") {
+      // 点击分类标签循环切换：工作 → 学习 → 生活 → 其他
+      const t = tasks.find(x => x.id === id);
+      if (t) {
+        const order = ["work", "study", "life", "other"];
+        t.category = order[(order.indexOf(t.category) + 1) % order.length];
+        saveTasks();
+        render();
+      }
+    } else if (action === "edit-priority") {
+      // 点击优先级标签循环切换：紧急 → 高 → 中 → 低
+      const t = tasks.find(x => x.id === id);
+      if (t) {
+        const order = ["urgent", "high", "medium", "low"];
+        t.priority = order[(order.indexOf(t.priority) + 1) % order.length];
+        saveTasks();
+        render();
+      }
+    } else if (action === "edit-time") {
+      // 点击时间 → 临时替换为原生 time 选择器
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+      const input = document.createElement("input");
+      input.type = "time";
+      input.value = t.dueTime || "";
+      input.className = "task-time-input";
+      actionEl.replaceWith(input);
+      input.focus();
+      // 部分浏览器需主动 click 才能弹出选择器
+      try { input.click(); } catch (err) {}
+      let done = false;
+      const commit = () => {
+        if (done) return;
+        done = true;
+        t.dueTime = input.value || "";
+        saveTasks();
+        render();
+      };
+      input.addEventListener("change", commit);
+      input.addEventListener("blur", commit);
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape") { done = true; render(); }
+      });
     }
   });
 
@@ -2536,46 +2622,92 @@
     }
   });
 
-  // Inline edit on double click
-  taskList.addEventListener("dblclick", (e) => {
-    const titleEl = e.target.closest(".task-title");
-    if (!titleEl) return;
-    const item = titleEl.closest(".task-item");
-    if (!item) return;
-    const id = item.dataset.id;
-    const t = tasks.find(t => t.id === id);
-    if (!t || t.completed) return;
-
-    titleEl.contentEditable = "true";
-    titleEl.classList.add("editing");
-    titleEl.focus();
-    // select all text
+  // 通用内联编辑：双击进入，blur / Enter 保存，Esc 取消（兼容中文输入法）
+  function startInlineEdit(el, originalText, onCommit) {
+    el.contentEditable = "true";
+    el.classList.add("editing");
+    el.focus();
     const range = document.createRange();
-    range.selectNodeContents(titleEl);
+    range.selectNodeContents(el);
     const sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(range);
 
     const finish = (commit) => {
-      titleEl.contentEditable = "false";
-      titleEl.classList.remove("editing");
+      el.contentEditable = "false";
+      el.classList.remove("editing");
       if (commit) {
-        const newTitle = titleEl.textContent.trim();
-        if (newTitle && newTitle !== t.title) {
-          updateTask(id, { title: newTitle });
-          toast("已更新");
+        const newText = el.textContent.trim();
+        if (newText && newText !== originalText) {
+          onCommit(newText);
           return;
         }
       }
-      // revert if not committed
-      titleEl.textContent = t.title;
+      el.textContent = originalText;
     };
 
-    titleEl.addEventListener("blur", () => finish(true), { once: true });
-    titleEl.addEventListener("keydown", function handler(ev) {
-      if (ev.key === "Enter") { ev.preventDefault(); titleEl.blur(); }
+    el.addEventListener("blur", () => finish(true), { once: true });
+    el.addEventListener("keydown", function handler(ev) {
+      if (ev.isComposing) return;           // 中文输入法组合期间不处理
+      if (ev.key === "Enter") { ev.preventDefault(); el.blur(); }
       else if (ev.key === "Escape") { finish(false); }
     });
+  }
+
+  // Inline edit on double click：主任务标题 / 子任务文本 / 分点文本
+  taskList.addEventListener("dblclick", (e) => {
+    // —— 主任务标题 ——
+    const titleEl = e.target.closest(".task-title");
+    if (titleEl) {
+      const item = titleEl.closest(".task-item");
+      if (!item) return;
+      const id = item.dataset.id;
+      const t = tasks.find(t => t.id === id);
+      if (t && !t.completed) {
+        startInlineEdit(titleEl, t.title, (newTitle) => {
+          updateTask(id, { title: newTitle });
+          toast("已更新");
+        });
+      }
+      return;
+    }
+    // —— 子任务文本 ——
+    const subText = e.target.closest(".sub-text");
+    if (subText) {
+      const item = subText.closest(".task-item");
+      const subItem = subText.closest(".sub-item");
+      const t = item && tasks.find(x => x.id === item.dataset.id);
+      const s = t && subItem && Array.isArray(t.checklist) &&
+                t.checklist.find(x => x.id === subItem.dataset.subId);
+      if (s) {
+        startInlineEdit(subText, s.text, (newText) => {
+          s.text = newText;
+          saveTasks();
+          render();
+        });
+      }
+      return;
+    }
+    // —— 分点文本 ——
+    const pointText = e.target.closest(".point-text");
+    if (pointText) {
+      const item = pointText.closest(".task-item");
+      const subItem = pointText.closest(".sub-item");
+      const pointItem = pointText.closest(".point-item");
+      const t = item && tasks.find(x => x.id === item.dataset.id);
+      const s = t && subItem && Array.isArray(t.checklist) &&
+                t.checklist.find(x => x.id === subItem.dataset.subId);
+      const p = s && pointItem && Array.isArray(s.points) &&
+                s.points.find(x => x.id === pointItem.dataset.pointId);
+      if (p) {
+        startInlineEdit(pointText, p.text, (newText) => {
+          p.text = newText;
+          saveTasks();
+          render();
+        });
+      }
+      return;
+    }
   });
 
   // Filters
